@@ -70,6 +70,12 @@ def sync_batch(metrics_to_heal, lock_writes=False, overwrite=False):
     return batch_elapsed
 
 
+def copy(src,dst):
+    try:
+        subprocess.check_call(['cp', src, dst])
+    except subprocess.CalledProcessError as e:
+        logging.warn("Failed to copy from %s to %s! %s" % (src, dst, e))
+
 def heal_metric(source, dest, start_time=0, end_time=None, overwrite=False,
                 lock_writes=False):
     if end_time is None:
@@ -96,9 +102,9 @@ def heal_metric(source, dest, start_time=0, end_time=None, overwrite=False,
                     try:
                         # Make a backup of corrupt file
                         corrupt = dest + ".corrupt"
-                        shutil.copyfile(dest, corrupt)
+                        copy(dest, corrupt)
                         logging.warn("Corrupt file saved as %s" % corrupt)
-                        shutil.copyfile(source, dest)
+                        copy(source, dest)
                     except IOError as e:
                         logging.warn("Failed to copy %s! %s" % (dest, e))
             except Exception as e:
@@ -110,7 +116,7 @@ def heal_metric(source, dest, start_time=0, end_time=None, overwrite=False,
         except os.error:
             pass
         try:
-            shutil.copyfile(source, dest)
+            copy(source, dest)
         except IOError as e:
             logging.warn("Failed to copy %s! %s" % (dest, e))
 
